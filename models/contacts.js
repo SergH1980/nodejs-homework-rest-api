@@ -23,15 +23,11 @@ const getContactById = async (contactId) => {
 const removeContact = async (contactId) => {
   const contacts = await listContacts();
 
-  const index = contacts.findIndex((contact) => contact.id === contactId);
-  if (index === -1) {
+  const savedContact = contacts.filter((contact) => contact.id !== contactId);
+  if (contacts.length === savedContact.length) {
     return null;
   }
-  const newContacts = [
-    ...contacts.slice(0, index),
-    ...contacts.slice(index + 1),
-  ];
-  await fs.writeFile(contactsPath, JSON.stringify(newContacts, null, 2));
+  await fs.writeFile(contactsPath, JSON.stringify(savedContact, null, 2));
   return "Success";
 };
 
