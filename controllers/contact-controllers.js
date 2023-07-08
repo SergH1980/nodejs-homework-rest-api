@@ -46,7 +46,6 @@ const updateContactStatus = async (req, res, next) => {
   const contactId = req.params.contactId;
 
   const body = req.body;
-  console.log(req.body.name);
   const { favorite } = body;
 
   if (favorite === undefined) {
