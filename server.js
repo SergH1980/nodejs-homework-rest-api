@@ -1,13 +1,15 @@
 const app = require("./app");
 const mongoose = require("mongoose");
+const dotenv = require("dotenv");
 
-const DB_URI =
-  "mongodb+srv://serhii1980:k7u4bFDwmCEWAuVZ@cluster0.nv2flua.mongodb.net/db-contacts?w=majority";
+dotenv.config();
+
+const { DB_URI, PORT = 3000 } = process.env;
 
 mongoose
   .connect(DB_URI)
   .then(() => {
-    app.listen(3000);
+    app.listen(PORT);
     console.log("Database connection successful");
   })
   .catch((error) => {
