@@ -1,9 +1,5 @@
 const Joi = require("joi");
 
-// const nameRegexp = /^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$/;
-// const phoneRegexp =
-//   /^((\+)?(3)?(8)?[- ]?)?(\(?\d{3}\)?[- ]?)?\d{3}[- ]?\d{2}[- ]?\d{2}$/;
-
 const contactAddSchema = Joi.object({
   name: Joi.string()
     .max(40)
@@ -22,10 +18,13 @@ const contactAddSchema = Joi.object({
     .messages({ "any.required": 'Field "favorite" is missing' }),
 });
 
-const updateFavoriteSchema = Joi.object({
-  favorite: Joi.boolean()
-    .required()
-    .messages({ "any.required": 'Field "favorite" is missing' }),
-});
+const updateFavoriteSchema = Joi.object(
+  {
+    favorite: Joi.boolean().messages({
+      "any.required": 'Field "favorite" is missing',
+    }),
+  },
+  { abortEarly: false }
+);
 
 module.exports = { contactAddSchema, updateFavoriteSchema };

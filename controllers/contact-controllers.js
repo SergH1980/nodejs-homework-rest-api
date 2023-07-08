@@ -1,10 +1,10 @@
 const { Contact } = require("../models/contact");
-
+const { clientHttpError } = require("../helpers");
 const { ctrlWrapper } = require("../decorators");
 
 const getAllContacts = async (req, res) => {
   const result = await Contact.find({}, "-createdAt -updatedAt");
-  console.log(result);
+
   res.json(result);
 };
 
@@ -12,7 +12,8 @@ const getContactById = async (req, res) => {
   const contactId = req.params.contactId;
   const result = await Contact.findById(contactId);
   if (!result) {
-    return res.status(404).send({ message: "Not found" });
+    throw clientHttpError(404, "Not found");
+    // return res.status(404).send({ message: "Not found" });
   }
   res.status(200).json(result);
 };
@@ -26,30 +27,40 @@ const addContact = async (req, res) => {
 const updateContact = async (req, res, next) => {
   const contactId = req.params.contactId;
   const body = req.body;
-  const { name, email, phone } = body;
-  if (!name && !email && !phone) {
-    return res.status(400).send({ message: "Bad request" });
+  const { name, email, phone, favorite } = body;
+  if (!name && !email && !phone && !favorite) {
+    throw clientHttpError(400, "Bad request");
+    // return res.status(400).send({ message: "Bad request" });
   }
   const result = await Contact.findByIdAndUpdate(contactId, body, {
     new: true,
   });
   if (!result) {
-    return res.status(404).send({ message: "Not found" });
+    throw clientHttpError(404, "Not found");
+    // return res.status(404).send({ message: "Not found" });
   }
   res.status(200).json(result);
 };
 
 const updateContactStatus = async (req, res, next) => {
   const contactId = req.params.contactId;
-  console.log(req.params);
+
   const body = req.body;
-  console.log(body);
+  console.log(req.body.name);
+  const { favorite } = body;
+
+  if (favorite === undefined) {
+    throw clientHttpError(400, "Missing field favorite");
+  }
+
   const result = await Contact.findByIdAndUpdate(contactId, body, {
     new: true,
   });
-  console.log(result);
+
   if (!result) {
-    return res.status(404).send({ message: "Not found" });
+    throw clientHttpError(404, "Not found");
+
+    // return res.status(404).send({ message: "Not found" });
   }
   res.status(200).json(result);
 };
@@ -60,7 +71,9 @@ const removeContact = async (req, res, next) => {
     new: true,
   });
   if (!result) {
-    return res.status(404).send({ message: "Not found" });
+    throw clientHttpError(404, "Not found");
+
+    // return res.status(404).send({ message: "Not found" });
   }
   res.status(200).json({ message: "Contact deleted" });
 };

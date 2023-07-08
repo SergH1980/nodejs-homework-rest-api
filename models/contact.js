@@ -6,6 +6,15 @@ const contactSchema = new Schema(
   {
     name: {
       type: String,
+      max: 40,
+      validate: {
+        validator: function (v) {
+          return /^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$/.test(
+            v
+          );
+        },
+        message: (props) => `${props.value} is not a valid name!`,
+      },
       required: [true, "Set name for contact"],
     },
     email: {
