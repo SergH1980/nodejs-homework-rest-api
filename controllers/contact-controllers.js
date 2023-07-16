@@ -12,15 +12,20 @@ const getAllContacts = async (req, res) => {
     .filter((key) => key !== page)
     .filter((key) => key !== limit);
   // checking that there is only one parameter in query
-  if (queryKeys.length > 1) {
-    throw clientHttpError(400, "Please use only one filter parameter");
+
+  if (queryKeys.length > 4) {
+    throw clientHttpError(400, "Please don't use more than 4 parameters");
   }
-  // defining which query parameter is used
-  const queryName = queryKeys.join(", ");
 
   const result = await Contact.find(
-    queryName
-      ? { owner: req.user.id, [queryName]: req.query[queryName] }
+    queryKeys
+      ? {
+          owner: req.user.id,
+          [queryKeys[0]]: req.query[queryKeys[0]],
+          [queryKeys[1]]: req.query[queryKeys[1]],
+          [queryKeys[2]]: req.query[queryKeys[2]],
+          [queryKeys[3]]: req.query[queryKeys[3]],
+        }
       : { owner: req.user.id },
     "-createdAt -updatedAt",
     {
