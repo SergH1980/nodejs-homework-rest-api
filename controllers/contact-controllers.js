@@ -3,21 +3,31 @@ const { clientHttpError } = require("../helpers");
 const { ctrlWrapper } = require("../decorators");
 
 const getAllContacts = async (req, res) => {
-  const { page = 1, limit = 10, favorite } = req.query;
+  const { page = 1, limit = 10 } = req.query;
   const skip = (page - 1) * limit;
-  if (favorite !== undefined) {
-    const result = await Contact.find(
-      { owner: req.user.id, favorite },
-      "-createdAt -updatedAt",
-      { skip, limit }
-    );
-    return res.json(result);
+
+  // removing page and limit from query
+
+  const queryKeys = Object.keys(req.query)
+    .filter((key) => key !== page)
+    .filter((key) => key !== limit);
+  // checking that there is only one parameter in query
+  if (queryKeys.length > 1) {
+    throw clientHttpError(400, "Please use only one filter parameter");
   }
+  // defining which query parameter is used
+  const queryName = queryKeys.join(", ");
+
   const result = await Contact.find(
-    { owner: req.user.id },
+    queryName
+      ? { owner: req.user.id, [queryName]: req.query[queryName] }
+      : { owner: req.user.id },
     "-createdAt -updatedAt",
-    { skip, limit }
-  );
+    {
+      skip,
+      limit: Number(limit),
+    }
+  ).populate("owner", "email subscription");
   return res.json(result);
 };
 
