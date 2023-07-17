@@ -6,35 +6,25 @@ const getAllContacts = async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
   const skip = (page - 1) * limit;
 
-  // removing page and limit from query
+  // removing keys "page" and "limit" from query
 
   const queryKeys = Object.keys(req.query)
     .filter((key) => key !== "page")
     .filter((key) => key !== "limit");
 
-  let queryList = [];
+  const queryList = {
+    owner: req.user.id,
+  };
 
   if (queryKeys.length !== 0) {
-    queryKeys.forEach((key, i) => {
-      queryList.push(`${key}: "${req.query[key]}"`);
+    queryKeys.forEach((key) => {
+      queryList[key] = `${req.query[key]}`;
     });
   }
 
-  const queryString = queryList.join(", ");
-  console.log(queryList);
-  console.log(queryString);
-
   const result = await Contact.find(
-    queryString
-      ? {
-          owner: req.user.id,
-          queryString,
-          // [queryKeys[0]]: req.query[queryKeys[0]],
-          // [queryKeys[1]]: req.query[queryKeys[1]],
-          // [queryKeys[2]]: req.query[queryKeys[2]],
-          // [queryKeys[3]]: req.query[queryKeys[3]],
-        }
-      : { owner: req.user.id },
+    queryList,
+
     "-createdAt -updatedAt",
     {
       skip,
