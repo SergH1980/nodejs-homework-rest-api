@@ -130,27 +130,20 @@ const updateContactStatus = async (req, res, next) => {
 
 const removeContact = async (req, res, next) => {
   const contactId = req.params.contactId;
-  // const result = await Contact.findOneAndRemove(
-  //   { _id: contactId, owner: req.user.id },
-  //   {
-  //     new: true,
-  //   }
-  // );
-  // if (!result) {
-  //   throw clientHttpError(404, "Not found");
-  // }
-  // res.status(200).json({ message: "Contact deleted" });
-  const contact = await Contact.findOne({ _id: contactId });
-
-  if (contact === null) {
+  const result = await Contact.findOneAndRemove(
+    { _id: contactId, owner: req.user.id },
+    {
+      new: true,
+    }
+  );
+  if (!result) {
     throw clientHttpError(404, "Not found");
   }
 
-  if (contact.owner.valueOf() !== req.user.id) {
+  if (result.owner.valueOf() !== req.user.id) {
     throw clientHttpError(403, "No permission to delete");
   }
 
-  await Contact.findByIdAndRemove(contact.id);
   res.status(200).json({ message: "Contact deleted" });
 };
 
