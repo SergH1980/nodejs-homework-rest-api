@@ -17,7 +17,7 @@ const userAddSchema = Joi.object({
 });
 
 const userLoginSchema = Joi.object({
-  email: Joi.string().pattern(regEx).required().messages({
+  email: Joi.string().required().messages({
     "any.required": "Field 'email' is missing",
   }),
   password: Joi.string().min(6).required().messages({

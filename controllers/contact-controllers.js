@@ -9,22 +9,30 @@ const getAllContacts = async (req, res) => {
   // removing page and limit from query
 
   const queryKeys = Object.keys(req.query)
-    .filter((key) => key !== page)
-    .filter((key) => key !== limit);
-  // checking that there is only one parameter in query
+    .filter((key) => key !== "page")
+    .filter((key) => key !== "limit");
 
-  if (queryKeys.length > 4) {
-    throw clientHttpError(400, "Please don't use more than 4 parameters");
+  let queryList = [];
+
+  if (queryKeys.length !== 0) {
+    queryKeys.forEach((key, i) => {
+      queryList.push(`${key}: "${req.query[key]}"`);
+    });
   }
 
+  const queryString = queryList.join(", ");
+  console.log(queryList);
+  console.log(queryString);
+
   const result = await Contact.find(
-    queryKeys
+    queryString
       ? {
           owner: req.user.id,
-          [queryKeys[0]]: req.query[queryKeys[0]],
-          [queryKeys[1]]: req.query[queryKeys[1]],
-          [queryKeys[2]]: req.query[queryKeys[2]],
-          [queryKeys[3]]: req.query[queryKeys[3]],
+          queryString,
+          // [queryKeys[0]]: req.query[queryKeys[0]],
+          // [queryKeys[1]]: req.query[queryKeys[1]],
+          // [queryKeys[2]]: req.query[queryKeys[2]],
+          // [queryKeys[3]]: req.query[queryKeys[3]],
         }
       : { owner: req.user.id },
     "-createdAt -updatedAt",
