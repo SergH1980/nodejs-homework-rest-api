@@ -8,9 +8,9 @@ const getAllContacts = async (req, res) => {
 
   // removing keys "page" and "limit" from query
 
-  const queryKeys = Object.keys(req.query)
-    .filter((key) => key !== "page")
-    .filter((key) => key !== "limit");
+  const queryKeys = Object.keys(req.query).filter(
+    (key) => key !== "page" && key !== "limit"
+  );
 
   const queryList = {
     owner: req.user.id,
