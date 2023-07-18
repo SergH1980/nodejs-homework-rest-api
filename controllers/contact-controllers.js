@@ -3,23 +3,56 @@ const { clientHttpError } = require("../helpers");
 const { ctrlWrapper } = require("../decorators");
 
 const getAllContacts = async (req, res) => {
-  const result = await Contact.find({}, "-createdAt -updatedAt");
+  const { page = 1, limit = 10 } = req.query;
+  const skip = (page - 1) * limit;
 
-  res.json(result);
+  // removing keys "page" and "limit" from query
+
+  const queryKeys = Object.keys(req.query).filter(
+    (key) => key !== "page" && key !== "limit"
+  );
+
+  const queryList = {
+    owner: req.user.id,
+  };
+
+  if (queryKeys.length !== 0) {
+    queryKeys.forEach((key) => {
+      queryList[key] = `${req.query[key]}`;
+    });
+  }
+
+  const result = await Contact.find(
+    queryList,
+
+    "-createdAt -updatedAt",
+    {
+      skip,
+      limit: Number(limit),
+    }
+  ).populate("owner", "email subscription");
+  return res.json(result);
 };
 
 const getContactById = async (req, res) => {
   const contactId = req.params.contactId;
-  const result = await Contact.findById(contactId);
+  const result = await Contact.findOne({ _id: contactId, owner: req.user.id });
   if (!result) {
     throw clientHttpError(404, "Not found");
-    // return res.status(404).send({ message: "Not found" });
   }
   res.status(200).json(result);
 };
 
 const addContact = async (req, res) => {
-  const body = req.body;
+  const isRepeat = await Contact.findOne({
+    name: req.body.name,
+    email: req.body.email,
+    phone: req.body.phone,
+  });
+  if (isRepeat !== null) {
+    return res.status(409).send({ message: "Contact already exists" });
+  }
+  const body = { ...req.body, owner: req.user.id };
   const result = await Contact.create(body);
   res.status(201).json(result);
 };
@@ -30,15 +63,34 @@ const updateContact = async (req, res, next) => {
   const { name, email, phone, favorite } = body;
   if (!name && !email && !phone && !favorite) {
     throw clientHttpError(400, "Bad request");
-    // return res.status(400).send({ message: "Bad request" });
+  }
+
+  const contact = await Contact.findOne({ _id: contactId });
+
+  if (contact === null) {
+    throw clientHttpError(404, "Not found");
+  }
+
+  if (contact.owner.valueOf() !== req.user.id) {
+    throw clientHttpError(403, "No permission to update");
   }
   const result = await Contact.findByIdAndUpdate(contactId, body, {
     new: true,
   });
   if (!result) {
     throw clientHttpError(404, "Not found");
-    // return res.status(404).send({ message: "Not found" });
   }
+
+  // const result = await Contact.findOneAndUpdate(
+  //   { _id: contactId, owner: req.user.id },
+  //   body,
+  //   {
+  //     new: true,
+  //   }
+  // );
+  // if (!result) {
+  //   throw clientHttpError(404, "Not found");
+  // }
   res.status(200).json(result);
 };
 
@@ -52,28 +104,36 @@ const updateContactStatus = async (req, res, next) => {
     throw clientHttpError(400, "Missing field favorite");
   }
 
-  const result = await Contact.findByIdAndUpdate(contactId, body, {
-    new: true,
-  });
+  const result = await Contact.findOneAndUpdate(
+    { _id: contactId, owner: req.user.id },
+    body,
+    {
+      new: true,
+    }
+  );
 
   if (!result) {
     throw clientHttpError(404, "Not found");
-
-    // return res.status(404).send({ message: "Not found" });
   }
   res.status(200).json(result);
 };
 
 const removeContact = async (req, res, next) => {
   const contactId = req.params.contactId;
-  const result = await Contact.findByIdAndRemove(contactId, {
-    new: true,
-  });
+  const result = await Contact.findOneAndRemove(
+    { _id: contactId, owner: req.user.id },
+    {
+      new: true,
+    }
+  );
   if (!result) {
     throw clientHttpError(404, "Not found");
-
-    // return res.status(404).send({ message: "Not found" });
   }
+
+  if (result.owner.valueOf() !== req.user.id) {
+    throw clientHttpError(403, "No permission to delete");
+  }
+
   res.status(200).json({ message: "Contact deleted" });
 };
 
