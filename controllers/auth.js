@@ -16,7 +16,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 const { User } = require("../models/user");
 
-const avatarDir = path.resolve(`public`, `avatars`);
+const avatarDir = path.join(__dirname, `../`, `public`, `avatars`);
 
 // registration
 async function registration(req, res, next) {
@@ -127,7 +127,7 @@ async function subscriptionUpdate(req, res, next) {
 
 // update avatar
 
-async function avatarUpdate(req, res, next) {
+async function updateAvatar(req, res, next) {
   if (!req.file) {
     throw clientHttpError(401, "Not authorized");
   }
@@ -162,5 +162,5 @@ module.exports = {
   logout: ctrlWrapper(logout),
   current: ctrlWrapper(current),
   subscriptionUpdate: ctrlWrapper(subscriptionUpdate),
-  updateAvatar: ctrlWrapper(avatarUpdate),
+  updateAvatar: ctrlWrapper(updateAvatar),
 };
