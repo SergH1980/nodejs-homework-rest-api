@@ -14,7 +14,6 @@ const userData = {
   email: "test@info.com",
   password: "123123",
 };
-// const subscription = "starter";
 
 describe("login", () => {
   beforeAll(async () => {
@@ -26,8 +25,10 @@ describe("login", () => {
     await mongoose.disconnect(DB_TEST_URI);
   });
   beforeEach(async () => {
-    await User.deleteMany();
     await supertest(app).post(`/api/users/register`).send(userData);
+  });
+  afterEach(async () => {
+    await User.deleteMany();
   });
 
   // status code should be 201
