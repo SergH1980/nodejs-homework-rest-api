@@ -8,9 +8,9 @@ const {
   userLoginSchema,
 } = require("../../schemas/user-schema");
 
-const { isValidToken } = require("../../middlewares");
+const { isValidToken, upload } = require("../../middlewares");
 
-const AuthController = require("../../controllers/auth");
+const authController = require("../../controllers/auth");
 
 const router = express.Router();
 const jsonParser = express.json();
@@ -19,23 +19,30 @@ router.post(
   "/register",
   jsonParser,
   validateUser(userAddSchema),
-  AuthController.registration
+  authController.registration
 );
 
 router.post(
   "/login",
   jsonParser,
   validateUser(userLoginSchema),
-  AuthController.login
+  authController.login
 );
-router.post("/logout", isValidToken, AuthController.logout);
-router.get("/current", isValidToken, AuthController.current);
+router.post("/logout", isValidToken, authController.logout);
+router.get("/current", isValidToken, authController.current);
 router.patch(
   "/",
   isValidToken,
   jsonParser,
   validateUser(updateSubscriptionSchema),
-  AuthController.subscriptionUpdate
+  authController.subscriptionUpdate
+);
+
+router.patch(
+  "/avatars",
+  isValidToken,
+  upload.single("avatar"),
+  authController.updateAvatar
 );
 
 module.exports = router;

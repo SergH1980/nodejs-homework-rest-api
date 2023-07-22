@@ -2,6 +2,7 @@ const { Contact } = require("../models/contact");
 const { clientHttpError } = require("../helpers");
 const { ctrlWrapper } = require("../decorators");
 
+// all contacts
 const getAllContacts = async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
   const skip = (page - 1) * limit;
@@ -34,6 +35,8 @@ const getAllContacts = async (req, res) => {
   return res.json(result);
 };
 
+// get contact by Id
+
 const getContactById = async (req, res) => {
   const contactId = req.params.contactId;
   const result = await Contact.findOne({ _id: contactId, owner: req.user.id });
@@ -42,6 +45,8 @@ const getContactById = async (req, res) => {
   }
   res.status(200).json(result);
 };
+
+// add contact
 
 const addContact = async (req, res) => {
   const isRepeat = await Contact.findOne({

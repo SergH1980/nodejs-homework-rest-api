@@ -1,5 +1,11 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+
+const gravatar = require("gravatar");
+const path = require("path");
+const fs = require("fs/promises");
+const Jimp = require("jimp");
+
 const { ctrlWrapper } = require("../decorators");
 const { clientHttpError } = require("../helpers");
 
@@ -10,9 +16,12 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 const { User } = require("../models/user");
 
+const avatarDir = path.join(__dirname, `../`, `public`, `avatars`);
+
+// registration
 async function registration(req, res, next) {
   try {
-    const { email, password } = req.body;
+    const { email, password, subscription } = req.body;
 
     const user = await User.findOne({ email });
 
@@ -21,17 +30,28 @@ async function registration(req, res, next) {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
+    const avatarUrl = gravatar.url(email);
 
-    const result = await User.create({ email, password: passwordHash });
+    const result = await User.create({
+      ...req.body,
+      password: passwordHash,
+      subscription,
+      avatarUrl,
+    });
 
     res.status(201).send({
-      user: { email: result.email, subscription: result.subscription },
+      user: {
+        email: result.email,
+        subscription: result.subscription,
+        avatarUrl: result.avatarUrl,
+      },
     });
   } catch (err) {
     return next(err);
   }
 }
 
+// login
 async function login(req, res, next) {
   const { email, password } = req.body;
 
@@ -63,6 +83,8 @@ async function login(req, res, next) {
   }
 }
 
+// logout
+
 async function logout(req, res, next) {
   const user = await User.findOneAndUpdate(
     { _id: req.user.id },
@@ -76,6 +98,8 @@ async function logout(req, res, next) {
   return res.status(204);
 }
 
+// current
+
 async function current(req, res, next) {
   const user = await User.findOne({ _id: req.user.id });
 
@@ -88,6 +112,8 @@ async function current(req, res, next) {
     .send({ email: user.email, subscription: user.subscription });
 }
 
+// update subscription
+
 async function subscriptionUpdate(req, res, next) {
   const user = await User.findOne({ _id: req.user.id });
   if (user === null) {
@@ -99,10 +125,42 @@ async function subscriptionUpdate(req, res, next) {
   res.status(200).json(result);
 }
 
+// update avatar
+
+async function updateAvatar(req, res, next) {
+  if (!req.file) {
+    throw clientHttpError(401, "Not authorized");
+  }
+  const { id } = req.user;
+
+  const { path: tempUpload, originalname } = req.file;
+
+  await Jimp.read(tempUpload)
+    .then((avatar) => {
+      return avatar.resize(250, 250).quality(60).write(tempUpload);
+    })
+    .catch((err) => {
+      throw err;
+    });
+
+  const fileName = `${id}_${originalname}`;
+
+  const publicUpload = path.join(avatarDir, fileName);
+
+  await fs.rename(tempUpload, publicUpload);
+
+  const avatarUrl = path.join(`avatars`, fileName);
+
+  await User.findByIdAndUpdate(id, { avatarUrl });
+
+  res.status(200).json({ avatarUrl });
+}
+
 module.exports = {
   registration: ctrlWrapper(registration),
   login: ctrlWrapper(login),
   logout: ctrlWrapper(logout),
   current: ctrlWrapper(current),
   subscriptionUpdate: ctrlWrapper(subscriptionUpdate),
+  updateAvatar: ctrlWrapper(updateAvatar),
 };
