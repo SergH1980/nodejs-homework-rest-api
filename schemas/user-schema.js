@@ -34,4 +34,16 @@ const updateSubscriptionSchema = Joi.object({
     }),
 });
 
-module.exports = { userAddSchema, userLoginSchema, updateSubscriptionSchema };
+const resendVerificationSchema = Joi.object({
+  email: Joi.string()
+    .email()
+    .required()
+    .messages({ "any.required": 'Field "email" is missing' }),
+});
+
+module.exports = {
+  userAddSchema,
+  userLoginSchema,
+  updateSubscriptionSchema,
+  resendVerificationSchema,
+};

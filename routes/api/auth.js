@@ -6,6 +6,7 @@ const {
   userAddSchema,
   updateSubscriptionSchema,
   userLoginSchema,
+  resendVerificationSchema,
 } = require("../../schemas/user-schema");
 
 const { isValidToken, upload } = require("../../middlewares");
@@ -20,6 +21,14 @@ router.post(
   jsonParser,
   validateUser(userAddSchema),
   authController.registration
+);
+
+router.get("/verify/:verificationToken", authController.verify);
+
+router.post(
+  "/verify",
+  validateUser(resendVerificationSchema),
+  authController.resendVerificationEmail
 );
 
 router.post(
