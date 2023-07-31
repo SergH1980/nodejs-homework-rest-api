@@ -36,6 +36,9 @@ function auth(req, res, next) {
       if (user.token === null) {
         return res.status(401).json({ error: "Not authorized" });
       }
+      if (user.verify !== true) {
+        return res.status(401).json({ error: "Not verified user" });
+      }
       req.user = { id: decode.id };
       next();
     } catch (error) {
